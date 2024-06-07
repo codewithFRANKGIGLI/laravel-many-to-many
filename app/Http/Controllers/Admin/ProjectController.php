@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Type;
+use App\Models\Technology;
 
 use function PHPSTORM_META\type;
 
@@ -38,7 +39,8 @@ class ProjectController extends Controller
     public function create()
     {
         $types = Type::all();
-        return view('admin.projects.create', compact('types'));
+        $technologies = Technology::all();
+        return view('admin.projects.create', compact('types', 'technologies'));
     }
 
     /**
@@ -50,12 +52,15 @@ class ProjectController extends Controller
     public function store(Request $request)
     {
         // validation
-        $validated = $request->validate([
+        $request->validate([
             'name' => 'required|min:5|max:250|unique:projects,name',
             'client_name' => 'nullable|min:5',
             'cover_img' => 'nullable|image|max:256',
-            'summary' => 'nullable|min:20'
+            'summary' => 'nullable|min:20',
+            'type_id' => 'nullable|exists:types,id',
+            'technologies' => 'exists:technologies,id',
         ]);
+        
         $formData = $request->all();
 
         // Solo se l'utente ha caricato la cover image
@@ -73,7 +78,11 @@ class ProjectController extends Controller
         $newProject->fill($formData);
         $newProject->save();
 
-        return redirect()->route('admin.projects.show', ['project' => $newProject->id]);
+        if($request->has('technologies')) {
+            $newProject->technologies()->attach($formData['technologies']);
+        }
+
+        return redirect()->route('admin.projects.show', ['project' => $newProject->slug]);
     }
 
     /**
@@ -84,7 +93,9 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        return view('admin.projects.show', compact('project'));
+        // mostriamo le technologies
+        $technologies = $project->technologies;
+        return view('admin.projects.show', compact('project', 'technologies'));
     }
 
     /**
@@ -96,8 +107,9 @@ class ProjectController extends Controller
     public function edit(Project $project)
     {
         $types = Type::all();
+        $technologies = Technology::all();
 
-        return view('admin.projects.edit', compact('project','types'));
+        return view('admin.projects.edit', compact('project','types','technologies'));
     }
 
     /**
@@ -109,12 +121,13 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        $validated = $request->validate([
+        $request->validate([
             'name' => ['required', 'min:5', 'max:250', Rule::unique('projects')->ignore($project)],
             'client_name' => 'nullable|min:5',
-            'cover_img' => 'nullable|image|max:256'
+            'cover_img' => 'nullable|image|max:256',
+            'type_id' => 'nullable|exists:types,id',
+            'technologies' => 'exists:technologies,id'
         ]);
-
         $formData = $request->all();
 
         // Se l'utente ha caricato una nuova immagine
@@ -132,6 +145,13 @@ class ProjectController extends Controller
 
         $project->slug = Str::slug($formData['name'], '-');
         $project->update($formData);
+
+        // technologies management con if
+        if($request->has('technologies')) {
+            $project->technologies()->sync($formData['technologies']);
+        } else {
+            $project->technologies()->sync([]);
+        }
         // return redirect()->route('admin.projects.show', ['project' => $project->id]);
         return redirect()->route('admin.projects.show', ['project' => $project->slug])->with('message', $project->name . ' successfully updated.');
     }

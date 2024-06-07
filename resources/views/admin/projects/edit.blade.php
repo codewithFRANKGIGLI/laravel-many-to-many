@@ -35,13 +35,35 @@
                 @endforeach
               </select>
         </div>
+        {{-- checkbox per le technologies --}}
+        <div class="py-2">
+            <label for="technologies" class="form-label">Technologies: </label><br>
+            @foreach ($technologies as $technology)
+                <div class="form-check">
+                    @if ($errors->any())
+                    {{-- Se ci sono errori in pagina, allora voglio prepopolare le checkbox utilizzando old --}}
+                    <input class="form-check-input" @checked(in_array($technology->id, old('technologies', []))) name="technologies[]" type="checkbox" value="{{ $technology->id }}" id="technology-{{ $technology->id }}">
+                    @else
+                    {{-- Se non ci sono errori, l'utente sta caricando la pagina da zero allora voglio prepopolare le checkbox utilizzando il contains della collection --}}
+                    <input class="form-check-input" @checked($project->technologies->contains($technology)) name="technologies[]" type="checkbox" value="{{ $technology->id }}" id="technology-{{ $technology->id }}">
+                    @endif
+        
+                    <label class="form-check-label" for="technology-{{ $technology->id }}">
+                        {{ $technology->name }}
+                    </label>
+                </div>
+            @endforeach
+        </div>
         <div class="mb-3">
             <label for="cover_img" class="form-label">Image</label>
             <input class="form-control" type="file" id="cover_img" name="cover_img">
             
             @if ($project->cover_img)
                 <div>
-                    <img width="100" src="{{ asset('storage/' . $project->cover_img) }}" alt="{{ $project->name }}">
+                    <img width="100" src="{{ asset('storage/' . $project->cover_img) }}" alt="{{ $project->name }}"
+                    {{-- old per image --}}
+                    value="{{ $project->cover_img }}
+                    >
                 </div>
             @else
                 <small>No image</small>

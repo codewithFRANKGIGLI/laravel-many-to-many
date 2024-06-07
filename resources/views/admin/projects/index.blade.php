@@ -11,6 +11,7 @@
                 <th scope="col">Name</th>
                 <th scope="col">Client name</th>
                 <th scope="col">Type</th>
+                <th scope="col">Technologies</th>
                 <th scope="col">Image</th>
                 <th scope="col">Created at</th>
                 <th scope="col">Actions</th>
@@ -24,12 +25,19 @@
                     <td>{{ $project->client_name }}</td>
                     {{-- td per types --}}
                     <td>{{ $project->type ? $project->type->name : 'no type' }}</td>
+                    <td>
+                        @foreach ($project->technologies as $technology)
+                            {{ $technology->name }}{{ $loop->last ? '' : ', ' }}
+                        @endforeach
+                    </td>
+
 
                     {{-- mettere un if --}}
                     <td>
                         @if ($project->cover_img)
                             <div>
-                                <img src="{{ asset('storage/' . $project->cover_img) }}" alt="{{ $project->name }}" style="width: 5rem">
+                                <img src="{{ asset('storage/' . $project->cover_img) }}" alt="{{ $project->name }}"
+                                    style="width: 5rem">
                             </div>
                         @endif
                     </td>

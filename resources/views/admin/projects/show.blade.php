@@ -19,7 +19,17 @@
     <div>
         <strong>Type</strong>: {{ $project->type ? $project->type->name : 'no type' }}
     </div>
-
+    <div>
+        <strong>Technologies</strong>:
+        {{-- if per le technologies --}}
+        @if (count($project->technologies) > 0)
+            @foreach ($project->technologies as $technology)
+                {{ $technology->name }},
+            @endforeach          
+        @else
+            No technologies
+        @endif
+    </div>
     <div>
         <strong>Created at</strong>: {{ $project->created_at }}
     </div>
